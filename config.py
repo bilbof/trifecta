@@ -1,3 +1,4 @@
+import os
 from yaml import load, dump
 try:
   from yaml import CLoader as Loader, CDumper as Dumper
@@ -10,11 +11,17 @@ defaults = {
   "keep_n_checkpoints": 3,
   "wal_dir": "trie_wal",
   "checkpoint_dir": "trie_checkpoints",
+  "replication_factor": 1,
 }
 
 class Config():
   def __init__(self, filepath):
     self.filepath = filepath
+
+  @property
+  def node_id(self):
+    # TODO: something better
+    return os.getenv("HOSTNAME", "http://127.0.0.1:8000")
 
   def current(self):
     stream = open(self.filepath, 'r')
@@ -26,3 +33,7 @@ class Config():
 
   def checkpoint_interval(self):
     return self.current()["checkpoint_interval"]
+
+  @property
+  def replication_factor(self):
+    return self.current()["replication_factor"]

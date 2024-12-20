@@ -1,10 +1,5 @@
 # TODO
 
-* Distributed reads
-    * Assign nodes health in the ring, and keep a cache of health
-    * Update rangemap to associate a prefix with replication_factor nodes
-    * Forward queries to a healthy node that can be a coordinator for a shard
-    * If no shard owning node is healthy, return an error immediately
 * Distributed writes
     * Writes should be forwarded to a shard owner
     * If no node is healthy, return an error
@@ -13,6 +8,9 @@
         * Last write wins
         * Send whole subtries in write forwards
     * Expected that client will handle locking etc. and user will configure trifecta for use case
+
+---
+
 * Gossip versions and trigger background updates
     * Every second pick a random replica and request timestamps+hashes for tries, if any are out of sync replica requests the hashes from node
     * Keep tombstones of deleted keys so when we do a merge we don't bring back deleted data.
@@ -45,3 +43,4 @@ Ideas
 1. A shard-aware client that skips one potential hop
 1. Namespacing and/or word tagging
 1. Sorting (popularity:desc, alphabetical:desc)
+1. Concurrent healthchecks / gossips

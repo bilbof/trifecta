@@ -28,7 +28,7 @@ curl -X DELETE http://localhost:8000/api/v1/words -d '{"word":"foo"}' -H "Conten
 
 ## Distribution
 
-This will eventually be a distributed trie. Right now it's just a single node triedb.
+This will eventually be a distributed trie. Right now it only supports distributed reads. Writes have to be directed to the correct nodes.
 
 **Eventual design**
 
@@ -45,4 +45,8 @@ Increasing k-factor decreases memory usage of tries (since trie can be split int
 ```sh
 source .venv/bin/activate
 uv pip install -r requirements.txt
+
+HOSTNAME=http://127.0.0.1:8000 fastapi dev --port 8000
+HOSTNAME=http://127.0.0.1:8001 fastapi dev --port 8001
+HOSTNAME=http://127.0.0.1:8002 fastapi dev --port 8002
 ```

@@ -12,12 +12,14 @@ import base64
 from distributed_trie import DistributedTrie
 from wal import Wal
 from checkpoint import Checkpoint
+from coordinator import Coordinator
 
 config = Config("config.yaml")
 cluster = Cluster(config)
 rangemap = RangeMap(cluster, config)
 wal = Wal(config)
-distributed_trie = DistributedTrie(config, wal)
+coordinator = Coordinator(config, cluster, rangemap)
+distributed_trie = DistributedTrie(config, wal, rangemap, coordinator)
 trie = distributed_trie
 checkpointer = Checkpoint(config, trie)
 if not checkpointer.load() and distributed_trie.replay_wal():
@@ -79,13 +81,13 @@ def node_ranges(node_b64):
   node_name = str(base64.b64decode(node_b64), "utf-8")
   return {"ranges": rangemap.node_prefixes(node_name) }
 
-@app.get("/search/node")
-def prefix_to_node(q: str):
-  return {"node": rangemap.prefix_to_node(q) }
+@app.get("/search/nodes")
+def prefix_to_nodes(q: str):
+  return {"node": rangemap.nodes_for_key(q) }
 
 @app.get("/search")
 def search(q: str):
-  return {"results": distributed_trie.matches(q) }
+  return distributed_trie.matches(q)
 
 # API
 

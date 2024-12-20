@@ -6,7 +6,8 @@ replication_factor: 1 # spread data across <replication_factor> nodes
 zone: 1 # for topology aware spreads
 nodes:
 - http://127.0.0.1:8000
-# - http://127.0.0.1:8001
+- http://127.0.0.1:8001
 # - http://127.0.0.1:8002
+# - http://127.0.0.1:8003
 vnodes_per_node: 10 # number of virtual_nodes. increase for smaller shards
 heartbeat_interval: 5 # gossip every <heartbeat_interval> seconds

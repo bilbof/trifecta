@@ -10,13 +10,24 @@ class Cluster():
     self.config = config
     self.nodes = []
     self.virtual_nodes = {} # Virtual node hash -> physical node
+    self.sorted_vnode_hashes = [] # Virtual node hash ring
     self.update_nodes()
   
   def update_nodes(self):
     # TODO: Give grace period, timeouts
-    self.nodes = [{ "id": str(base64.b64encode(bytes(node, "utf-8")),"utf-8"), "host": node,  "ts": datetime.now(), "status": self.node_health(node) } for node in self.config.current()["nodes"]]
+    self.nodes = [
+      {
+        "id": str(base64.b64encode(bytes(node, "utf-8")),"utf-8"),
+        "host": node,
+        "ts": datetime.now(),
+        "status": self.node_health(node)
+      } for node in self.config.current()["nodes"]
+    ]
     self._generate_virtual_nodes()
   
+  def healthy_nodes(self):
+    return [n for n in self.nodes if n["status"]["healthy"]]
+
   def node_health(self, node):
     try:
       res = httpx.get(f"{node}/ready")
@@ -41,7 +52,8 @@ class Cluster():
         vnode_key = f"{node['host']}_vnode_{i}"
         vnode_hash = self.hash(vnode_key)
         virtual_nodes[vnode_hash] = node['host']
-    self.virtual_nodes = dict(sorted(virtual_nodes.items())) # wat
+    self.virtual_nodes = dict(sorted(virtual_nodes.items()))
+    self.sorted_vnode_hashes = sorted(virtual_nodes.keys())
 
   def hash(self, key):
     """
