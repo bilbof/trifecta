@@ -1,13 +1,9 @@
 # TODO
 
 * Distributed writes
-    * Writes should be forwarded to a shard owner
-    * If no node is healthy, return an error
-    * Get writes accepted by configured quorum before returning a result
-        * Version tries (keep a timestamp of last write on keys and share timestamp)
+    * Version tries (keep a timestamp of last write on keys and share timestamp)
         * Last write wins
-        * Send whole subtries in write forwards
-    * Expected that client will handle locking etc. and user will configure trifecta for use case
+        * Treat a subtrie as an object. Send whole trie in write forwards
 
 ---
 
@@ -29,6 +25,8 @@
 * Address todos
 * Logging + metrics + stats page
 * Limits and pagination
+* Parallel writes, aborts, hedging
+* Rollback writes if quorum fails
 
 ---------------------------
 
@@ -44,3 +42,4 @@ Ideas
 1. Namespacing and/or word tagging
 1. Sorting (popularity:desc, alphabetical:desc)
 1. Concurrent healthchecks / gossips
+1. Expected that client will handle locking etc. and user will configure trifecta for use case (i.e. writes to triedb should be done in sequence by clients), but maybe we can handle this for them (by versioning/tombstoning words, not tries)

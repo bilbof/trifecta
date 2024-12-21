@@ -28,7 +28,7 @@ class Wal:
     for walfile in globbed:
       with open(walfile, 'r') as f:
         for line in f.readlines():
-          action, object = line.rstrip().split(" ")
+          action, object = line.rstrip().split(" ", maxsplit=1)
           yield (action, object)
 
   def rotate(self):

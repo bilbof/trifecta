@@ -1,5 +1,5 @@
 from typing import Union
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from fastapi import FastAPI, APIRouter
 from config import Config
 from cluster import Cluster
@@ -9,7 +9,7 @@ from contextlib import asynccontextmanager
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 import base64
-from distributed_trie import DistributedTrie
+from sharded_trie import ShardedTrie
 from wal import Wal
 from checkpoint import Checkpoint
 from coordinator import Coordinator
@@ -18,19 +18,11 @@ config = Config("config.yaml")
 cluster = Cluster(config)
 rangemap = RangeMap(cluster, config)
 wal = Wal(config)
-coordinator = Coordinator(config, cluster, rangemap)
-distributed_trie = DistributedTrie(config, wal, rangemap, coordinator)
-trie = distributed_trie
+trie = ShardedTrie(config, wal) # TODO: rename to trieDB
+coordinator = Coordinator(config, cluster, rangemap, trie)
 checkpointer = Checkpoint(config, trie)
-if not checkpointer.load() and distributed_trie.replay_wal():
-  trie.add("twitter")
-  trie.add("twitch")
-  trie.add("twilight")
-  trie.add("twigs")
-  trie.add("twig")
-  trie.add("tough")
-  trie.add("thought")
-
+checkpointer.load()
+trie.replay_wal()
 
 def node_healthchecks():
   print(f"Checking health of nodes at {datetime.now()}")
@@ -87,7 +79,7 @@ def prefix_to_nodes(q: str):
 
 @app.get("/search")
 def search(q: str):
-  return distributed_trie.matches(q)
+  return coordinator.matches(q)
 
 # API
 
@@ -99,17 +91,25 @@ api_router = APIRouter(
 
 class Word(BaseModel):
   word: str
+  gossip: bool = Field(default=True)
 
 @api_router.post("/words")
 async def create_word(word: Word):
   # check added strings are in lexicon
-  trie.add(word.word)  
-  return { "message": f"Added '{word.word}' to Trifecta db" }
+  ok = coordinator.add(word)
+  if ok:
+    return { "message": f"Added '{word.word}' to Trifecta db" }
+  else:
+    return { "error": f"Did not add '{word.word}' to Trifecta db" }
 
 @api_router.delete("/words")
 async def delete_word(word: Word):
-  trie.remove(word.word)
-  return { "message": f"Deleted '{word.word}' from Trifecta db" }
+  ok = coordinator.remove(word)
+  if ok:
+    return { "message": f"Removed '{word.word}' to Trifecta db" }
+  else:
+    return { "error": f"Did not remove '{word.word}' to Trifecta db" }
+
 
 app.include_router(api_router)
 

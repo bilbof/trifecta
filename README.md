@@ -40,6 +40,17 @@ A node in the ring owns some portion of the trie. The size of these portions is 
 
 Increasing k-factor decreases memory usage of tries (since trie can be split into smaller shards) at a cost of slightly increasing memory usage of coordinator (rangemap). Main issue is functional since you can't currently search for a trie with a length less than the k-factor.
 
+## Components
+
+* API
+* Coordinator
+* ShardedTrie
+* LocalDB
+* Gossip
+* ~Registration
+
+Request flow: API -> Coordinator -> ShardedTrie -> LocalDB
+
 ## Developing locally
 
 ```sh

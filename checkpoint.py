@@ -6,9 +6,9 @@ import os
 import glob
 
 class Checkpoint:
-  def __init__(self, config, distributed_trie):
+  def __init__(self, config, sharded_trie):
     self.config = config
-    self.distributed_trie = distributed_trie
+    self.sharded_trie = sharded_trie
     self.dir = config.current()["checkpoint_dir"]
     self._ensure_dir()
 
@@ -20,7 +20,7 @@ class Checkpoint:
       for line in f.readlines():
         prefix, object = line.rstrip().split(" ", maxsplit=1)
         trie_dict = json.loads(object)
-        self.distributed_trie.load(prefix, trie_dict)
+        self.sharded_trie.load(prefix, trie_dict)
     return True
 
 
@@ -29,7 +29,7 @@ class Checkpoint:
     timestamp = str(int(time.time() * 100))
     tmp = open(os.path.join(os.getcwd(), self.dir, timestamp), "a+")
     try:
-      for prefix, trie in self.distributed_trie.range_tries.items():
+      for prefix, trie in self.sharded_trie.range_tries.items():
         print(f"{prefix} {json.dumps(trie.dict())}", file=tmp)
       checkpointed = True
     finally:
@@ -68,13 +68,12 @@ class Checkpoint:
 
 
 # from config import Config
-# from distributed_trie import DistributedTrie
+# from sharded_trie import ShardedTrie
 # from wal import Wal
 
 # config = Config("config.yaml")
 # wal = Wal(config)
-# distributed_trie = DistributedTrie(config, wal)
-# trie = distributed_trie
+# trie = ShardedTrie(config, wal)
 
 # trie.add("twitter")
 # trie.add("twitch")

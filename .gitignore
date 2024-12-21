@@ -12,3 +12,5 @@ wheels/
 # data
 trie_checkpoints
 trie_wal
+
+tmp/
